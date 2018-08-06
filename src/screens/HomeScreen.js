@@ -15,7 +15,7 @@ import { List, ListItem } from 'react-native-elements'
 import { WebBrowser } from 'expo'
 
 import { MonoText } from '../components/StyledText'
-import { Loading } from '../components/Loading'
+import Loading from '../components/Loading'
 
 export default class HomeScreen extends React.Component {
   static navigationOptions = {
@@ -37,46 +37,35 @@ export default class HomeScreen extends React.Component {
     this.getPokemons(this.state.defualtUrl, true)
   }
 
-  getPokemons = async (url, refresh = false) => {
+  getPokemons(url, refresh = false) {
+    const { pokemons } = this.state
     fetch(url, {
       method: 'GET',
     })
-      .then((response) => response.json())
-      .then((responseJson) => {
-        let { pokemons } = this.state
-        if (refresh) {
-          pokemons = responseJson.results
-        } else {
-          Array.prototype.push.apply(pokemons, responseJson.results)
-        }
+      .then(response => response.json())
+      .then(responseJson => {
         this.setState({ 
-          pokemons: pokemons,
+          pokemons: refresh ? responseJson.results : [...pokemons, ...responseJson.results],
           next: responseJson.next,
           pokemonsLoaded: true 
         });
       })
-      .catch((error) => {
+      .catch(error => {
         console.error(error);
       });
   }
 
-  render() {
-    const { pokemons, pokemonsLoaded } = this.state
-
-    let pokemonList = <Loading />
-    if (pokemonsLoaded) {
-      pokemonList = <List containerStyle={{ marginBottom: 20 }}>
-        {
-          pokemons.map((pokemon, i) => (
-            <ListItem
-              key={i}
-              title={pokemon.name}
-              onPress={() => this.props.navigation.navigate('PokemonDetails', pokemon.url)}
-            />
-          ))
-        }
-      </List>
+  scrollLoading(e) {
+    let paddingToBottom = 5;
+    paddingToBottom += e.nativeEvent.layoutMeasurement.height;
+    if (e.nativeEvent.contentOffset.y >= e.nativeEvent.contentSize.height - paddingToBottom) {
+      this.getPokemons(this.state.next, false)
     }
+  }
+
+  render() {
+    const { navigation } = this.props
+    const { pokemons, pokemonsLoaded } = this.state
 
     return (
       <View style={styles.container}>
@@ -86,13 +75,7 @@ export default class HomeScreen extends React.Component {
           refreshControl = {
             this._refreshControl()
           }
-          onScroll = {(e) => {
-            let paddingToBottom = 5;
-            paddingToBottom += e.nativeEvent.layoutMeasurement.height;
-            if (e.nativeEvent.contentOffset.y >= e.nativeEvent.contentSize.height - paddingToBottom) {
-              this.getPokemons(this.state.next, false)
-            }
-          }}
+          onScroll={e => this.scrollLoading(e)}
         >
           <View style={styles.welcomeContainer}>
             <Image
@@ -104,7 +87,15 @@ export default class HomeScreen extends React.Component {
               style={styles.welcomeImage}
             />
           </View>
-          {pokemonList}
+          {pokemonsLoaded ? <List containerStyle={{ marginBottom: 20 }}>
+            {pokemons.map((pokemon, i) => (
+              <ListItem
+                key={i}
+                title={pokemon.name}
+                onPress={() => navigation.navigate('PokemonDetails', pokemon.url)}
+              />
+            ))}
+          </List> : <Loading />}
         </ScrollView>
       </View>
     );

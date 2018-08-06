@@ -14,7 +14,7 @@ import { List, ListItem } from 'react-native-elements'
 import { WebBrowser } from 'expo';
 
 import { MonoText } from '../components/StyledText'
-import { Loading } from '../components/Loading'
+import Loading from '../components/Loading'
 
 export default class DetailsScreen extends React.Component {
     static navigationOptions = {
@@ -31,35 +31,28 @@ export default class DetailsScreen extends React.Component {
     }
 
     componentDidMount() {
-        this.getPokemon(this.props.navigation.state.params)
+        const { navigation: { state: { params } } } = this.props
+        this.getPokemon(params)
     }
 
-    getPokemon = async (url) => {
+    getPokemon(url) {
         fetch(url, {
             method: 'GET',
         })
-            .then((response) => response.json())
-            .then((responseJson) => {
+            .then(response => response.json())
+            .then(responseJson => {
                 this.setState({ pokemon: responseJson, pokemonLoaded: true });
             })
-            .catch((error) => {
+            .catch(error => {
                 console.error(error);
             });
     }
 
     render() {
         const { pokemon, pokemonLoaded } = this.state
- 
-        let description = <Loading />
-        if (pokemonLoaded) {
-            const abilities = pokemon.abilities.map((ability, i) => (
-                <Text 
-                    key={`ability${i}`}
-                    style={styles.getStartedText}
-                >{ability.ability.name}</Text>
-            ))
 
-            description = <View style={styles.container}>
+        return (
+            pokemonLoaded ? <View style={styles.container}>
                 <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
                     <View style={styles.welcomeContainer}>
                         <Text style={styles.getStartedText}>{pokemon.name}</Text>
@@ -74,15 +67,16 @@ export default class DetailsScreen extends React.Component {
 
                         <Text style={styles.getStartedText}>Abilities</Text>
                         <View style={[styles.codeHighlightContainer, styles.homeScreenFilename]}>
-                            {abilities}
+                            {pokemon.abilities.map((ability, i) => (
+                                <Text
+                                    key={`ability${i}`}
+                                    style={styles.getStartedText}
+                                >{ability.ability.name}</Text>
+                            ))}
                         </View>
                     </View>
                 </ScrollView>
-            </View>
-        }
-
-        return (
-            description
+            </View> : <Loading />
         );
     }
 }
