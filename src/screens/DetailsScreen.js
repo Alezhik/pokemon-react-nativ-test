@@ -10,7 +10,7 @@ import {
     Alert,
     ActivityIndicator
 } from 'react-native';
-import { List, ListItem } from 'react-native-elements'
+import { List, ListItem, Icon } from 'react-native-elements'
 import { WebBrowser } from 'expo';
 
 import { MonoText } from '../components/StyledText'
@@ -50,10 +50,18 @@ export default class DetailsScreen extends React.Component {
 
     render() {
         const { pokemon, pokemonLoaded } = this.state
+        const { navigation } = this.props
 
         return (
             pokemonLoaded ? <View style={styles.container}>
                 <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+                    <View style={styles.iconStyle}>
+                        <Icon
+                            name='arrow-left'
+                            type='feather'
+                            onPress={() => navigation.navigate('Pokemon')}
+                        />
+                    </View>
                     <View style={styles.welcomeContainer}>
                         <Text style={styles.getStartedText}>{pokemon.name}</Text>
                         <Image
@@ -118,5 +126,10 @@ const styles = StyleSheet.create({
         color: 'rgba(96,100,109, 1)',
         lineHeight: 24,
         textAlign: 'center',
+    },
+    iconStyle: {
+        alignItems: 'flex-start',
+        position: 'absolute',
+        padding: 20
     },
 });
