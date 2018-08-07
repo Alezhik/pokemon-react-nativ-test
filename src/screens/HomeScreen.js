@@ -29,6 +29,7 @@ export default class HomeScreen extends React.Component {
       pokemons: [],
       pokemonsLoaded: false, 
       next: null,
+      presentUrl: null,
       defualtUrl: `https://pokeapi.co/api/v2/pokemon/?limit=0&offset=0`,
     };
   }
@@ -38,21 +39,25 @@ export default class HomeScreen extends React.Component {
   }
 
   getPokemons(url, refresh = false) {
-    const { pokemons } = this.state
-    fetch(url, {
-      method: 'GET',
-    })
-      .then(response => response.json())
-      .then(responseJson => {
-        this.setState({ 
-          pokemons: refresh ? responseJson.results : [...pokemons, ...responseJson.results],
-          next: responseJson.next,
-          pokemonsLoaded: true 
-        });
+    const { pokemons, presentUrl } = this.state
+    if (presentUrl !== url) {
+      this.setState({ presentUrl: url })
+      fetch(url, {
+        method: 'GET',
       })
-      .catch(error => {
-        console.error(error);
-      });
+        .then(response => response.json())
+        .then(responseJson => {
+          console.log("responseJson", presentUrl, url)
+          this.setState({ 
+            pokemons: refresh ? responseJson.results : pokemons.concat(responseJson.results), // [...pokemons, ...responseJson.results],
+            next: responseJson.next,
+            pokemonsLoaded: true 
+          });
+        })
+        .catch(error => {
+          console.error(error);
+        });
+    }
   }
 
   scrollLoading(e) {
